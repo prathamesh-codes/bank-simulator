@@ -1,5 +1,6 @@
 package com.billdesk.pg.payments.simulator.bank.cab;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -146,6 +147,13 @@ public class CabService implements NetbankingBankSimulator{
 	                "expected literal 'P'"
 	        );
 	    }
+	    
+//	    if (!"online".equalsIgnoreCase(raw.get("mode"))) {
+//	        return ValidationResult.fail(
+//	                "mode",
+//	                "expected literal 'online'"
+//	        );
+//	    }
 
 	    /*
 	     * 3. PID outside encrypted data must match
@@ -253,12 +261,6 @@ public class CabService implements NetbankingBankSimulator{
 	        }
 	    }
 	    
-	    if (!"online".equalsIgnoreCase(raw.get("mode"))) {
-	        return ValidationResult.fail(
-	                "mode",
-	                "expected literal 'online'"
-	        );
-	    }
 
 	    return ValidationResult.ok();
 	}
@@ -674,6 +676,13 @@ public class CabService implements NetbankingBankSimulator{
 	@Override
 	public Map<String, String> preprocessInit(
 	        Map<String, String> rawFields) {
+		
+		logger.info(
+			    "CAB crypto config lengths: encryptionKey={} checksumKey={} iv={}",
+			    encryptionKey == null ? null : encryptionKey.getBytes(StandardCharsets.UTF_8).length,
+			    checksumKey == null ? null : checksumKey.getBytes(StandardCharsets.UTF_8).length,
+			    iv == null ? null : iv.getBytes(StandardCharsets.UTF_8).length
+			);
 
 	    String encryptedData =
 	            rawFields.get("data");
