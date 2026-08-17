@@ -152,6 +152,25 @@ public class SimulatorService {
                  parsed.getTransactionId(),
                  e);
     }
+    
+    try {
+
+        record.setBankMetadata(
+                objectMapper.writeValueAsString(
+                        initFields
+                )
+        );
+
+    } catch (Exception e) {
+
+        logger.warn(
+                "Could not serialize bank metadata bankId={} txnId={}",
+                bankId,
+                parsed.getTransactionId(),
+                e
+        );
+    }
+    
     store.save(record);
     logger.info("Simulator record initiated bankId={} txnId={} amount={} currency={} returnUrl={}",
                bankId,
@@ -249,7 +268,15 @@ public class SimulatorService {
 
     logger.info("Received QRY_INIT_URL verification call for bankId={} rawParams={}", bankId, rawParams);
     NetbankingBankSimulator simulator = resolveBank(bankId);
-    String txnId = simulator.extractVerificationTxnId(rawParams);
+    Map<String, String> params =
+            simulator.preprocessVerification(
+                    rawParams
+            );
+
+    String txnId =
+            simulator.extractVerificationTxnId(
+                    params
+            );
     if (txnId == null || txnId.isBlank()) {
       logger.warn("Cannot resolve transaction id from verification request for bankId={}", bankId);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -271,7 +298,10 @@ public class SimulatorService {
                                                                                                      "tester has not submitted an outcome on the simulator page yet")));
     }
 
-    ValidationResult validation = simulator.validateVerification(rawParams, record);
+    ValidationResult validation = simulator.validateVerification(
+            params,
+            record
+    );
     if ( !validation.isValid()) {
       logger.warn("Verification-call validation failed for bankId={} txnId={} field={} reason={}",
                  bankId,

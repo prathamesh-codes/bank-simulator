@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Net Banking Simulator — [[${record.bankId}]]</title>
+  <style>
+    body { font-family: -apple-system, Segoe UI, sans-serif; max-width: 640px; margin: 40px auto; color: #1a1a1a; }
+    h1 { font-size: 20px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .field { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    .field span:first-child { color: #666; }
+    label { display: block; margin-top: 14px; font-weight: 600; font-size: 14px; }
+    select, input[type=number], input[type=text] { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 20px; padding: 10px 18px; font-size: 15px; cursor: pointer; }
+    #delaySecondsRow, #failureReasonRow { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Net Banking Simulator — [[${record.bankId}]]</h1>
+  <div class="card">
+    <div class="field"><span>Transaction id</span><span th:text="${record.txnId}"></span></div>
+    <div class="field"><span>Amount</span><span th:text="${record.txnAmount} + ' ' + ${record.txnCurrency}"></span></div>
+    <div class="field"><span>Simulator status</span><span th:text="${record.txnStatus}"></span></div>
+  </div>
+
+  <form id="submitForm" method="post" th:action="@{/simulator/netbanking/{bankId}/{txnId}/submit(bankId=${record.bankId},txnId=${record.txnId})}">
+    <label for="result">Result</label>
+    <select id="result" name="result">
+      <option th:each="r : ${results}" th:value="${r}" th:text="${r}"></option>
+    </select>
+
+    <div id="failureReasonRow">
+      <label for="failureReason">Failure reason</label>
+      <input type="text" id="failureReason" name="failureReason" list="knownFailureReasons"/>
+      <datalist id="knownFailureReasons">
+        <option th:each="reason : ${knownFailureReasons}" th:value="${reason}"></option>
+      </datalist>
+
+      <label for="errorCode">Error code</label>
+      <input type="text" id="errorCode" name="errorCode"/>
+    </div>
+
+    <label for="delivery">Delivery mode</label>
+    <select id="delivery" name="delivery">
+      <option th:each="d : ${deliveries}" th:value="${d}" th:text="${d}"></option>
+    </select>
+
+    <div id="delaySecondsRow">
+      <label for="delaySeconds">Delay (seconds)</label>
+      <input type="number" id="delaySeconds" name="delaySeconds" min="0" max="120" th:value="${defaultDelaySeconds}"/>
+    </div>
+
+    <button type="submit" id="submitButton">Submit</button>
+  </form>
+  <p id="statusMessage"></p>
+
+  <script th:inline="javascript">
+    const resultSel = document.getElementById('result');
+    const deliverySel = document.getElementById('delivery');
+    const failureRow = document.getElementById('failureReasonRow');
+    const delayRow = document.getElementById('delaySecondsRow');
+    function sync() {
+      failureRow.style.display = resultSel.value === 'FAILURE' ? 'block' : 'none';
+      delayRow.style.display = deliverySel.value === 'DELAY' ? 'block' : 'none';
+    }
+    resultSel.addEventListener('change', sync);
+    deliverySel.addEventListener('change', sync);
+    sync();
+
+    // The bank never redirects the tester's browser to PG's bankresponse URL itself — that's an
+    // S2S endpoint. But PG's response to that S2S call can carry its own next hop (return_url +
+    // transaction_response, e.g. the SDK result page), so submit is done via fetch (not a native
+    // form POST) to read that response and either navigate there or just close the tab.
+    const form = document.getElementById('submitForm');
+    const submitButton = document.getElementById('submitButton');
+    const statusMessage = document.getElementById('statusMessage');
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      submitButton.disabled = true;
+      fetch(form.action, { method: 'POST', body: new FormData(form) })
+        .then(function (response) { return response.json(); })
+        .then(function (body) {
+          if (body.redirectUrl) {
+            window.location.href = body.redirectUrl;
+            return;
+          }
+          statusMessage.textContent = 'Sent. You can close this tab now.';
+          window.close();
+        })
+        .catch(function () {
+          statusMessage.textContent = 'Submit failed — see the browser console.';
+          submitButton.disabled = false;
+        });
+    });
+  </script>
+</body>
+</html>

@@ -1,7 +1,10 @@
 package com.billdesk.pg.payments.simulator.model;
 
+import java.time.LocalDateTime;
+
 import com.billdesk.pg.payments.simulator.enums.ResultOutcome;
 import com.billdesk.pg.payments.simulator.enums.SimulatorStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,7 +17,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.time.LocalDateTime;
 
 /**
  * One row per simulated net-banking transaction attempt. Field set and naming follow
@@ -81,6 +83,10 @@ public class SimulatorRecord {
 
   @Column(name = "UPDATED_AT", nullable = false)
   private LocalDateTime updatedAt;
+  
+  @Lob
+  @Column(name = "BANK_METADATA")
+  private String bankMetadata;
 
   @PrePersist
   void onCreate() {
@@ -250,4 +256,13 @@ public class SimulatorRecord {
 
     return updatedAt;
   }
+  
+  public String getBankMetadata() {
+	    return bankMetadata;
+	}
+
+	public void setBankMetadata(
+	        String bankMetadata) {
+	    this.bankMetadata = bankMetadata;
+	}
 }

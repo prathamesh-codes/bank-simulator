@@ -90,4 +90,10 @@ public interface NetbankingBankSimulator {
 
     return List.of();
   }
+  
+  default Map<String, String> preprocessVerification(
+	        Map<String, String> rawParams) {
+
+	    return rawParams;
+	}
 }
