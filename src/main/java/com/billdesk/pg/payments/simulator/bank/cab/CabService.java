@@ -7,6 +7,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
 import com.billdesk.pg.payments.simulator.core.NetbankingBankSimulator;
@@ -70,19 +71,18 @@ public class CabService implements NetbankingBankSimulator{
 	                "amount",
 	                "currency",
 	                "return_url",
-	                "account_no",
 	                "checkval"
 	        );
 
 	private static final List<String> REQUIRED_VERIFY_FIELDS =
 	        List.of(
-	                "status",
+	                "mode",
 	                "payment_ref_no",
+	                "payee_id",
 	                "biller_name",
 	                "bank_ref_no",
 	                "amount",
-	                "account_no",
-	                "error_msg",
+	                "currency",
 	                "checkval"
 	        );
 
@@ -95,6 +95,9 @@ public class CabService implements NetbankingBankSimulator{
 	                "Payment failed"
 	        );
 
+	@Value("${simulator.cab.confirmation-url:}")
+	String confirmationUrl;
+	
 	@Value("${simulator.cab.checksum-key:}")
 	String checksumKey;
 
@@ -249,6 +252,13 @@ public class CabService implements NetbankingBankSimulator{
 	            );
 	        }
 	    }
+	    
+	    if (!"online".equalsIgnoreCase(raw.get("mode"))) {
+	        return ValidationResult.fail(
+	                "mode",
+	                "expected literal 'online'"
+	        );
+	    }
 
 	    return ValidationResult.ok();
 	}
@@ -355,8 +365,13 @@ public class CabService implements NetbankingBankSimulator{
 	    );
 
 	    return new CallbackDelivery(
-	            record.getReturnUrl(),
-	            callbackFields
+	            confirmationUrl,
+	            Map.of(),
+	            Map.of(
+	                    "data",
+	                    encrypted
+	            ),
+	            HttpMethod.POST
 	    );
 	}
 

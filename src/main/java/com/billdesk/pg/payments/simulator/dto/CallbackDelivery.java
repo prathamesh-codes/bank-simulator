@@ -14,34 +14,48 @@ import org.springframework.http.HttpMethod;
  */
 public class CallbackDelivery {
 
-  private final String targetUrl;
-  private final Map<String, String> queryParams;
-  private final HttpMethod s2sMethod;
+    private final String targetUrl;
+    private final Map<String, String> queryParams;
+    private final Map<String, String> formFields;
+    private final HttpMethod s2sMethod;
 
-  public CallbackDelivery(String targetUrl, Map<String, String> queryParams) {
+    public CallbackDelivery(
+            String targetUrl,
+            Map<String, String> queryParams) {
 
-    this(targetUrl, queryParams, HttpMethod.GET);
-  }
+        this(
+                targetUrl,
+                queryParams,
+                Map.of(),
+                HttpMethod.GET
+        );
+    }
 
-  public CallbackDelivery(String targetUrl, Map<String, String> queryParams, HttpMethod s2sMethod) {
+    public CallbackDelivery(
+            String targetUrl,
+            Map<String, String> queryParams,
+            Map<String, String> formFields,
+            HttpMethod s2sMethod) {
 
-    this.targetUrl = targetUrl;
-    this.queryParams = queryParams;
-    this.s2sMethod = s2sMethod;
-  }
+        this.targetUrl = targetUrl;
+        this.queryParams = queryParams;
+        this.formFields = formFields;
+        this.s2sMethod = s2sMethod;
+    }
 
-  public String getTargetUrl() {
+    public String getTargetUrl() {
+        return targetUrl;
+    }
 
-    return targetUrl;
-  }
+    public Map<String, String> getQueryParams() {
+        return queryParams;
+    }
 
-  public Map<String, String> getQueryParams() {
+    public Map<String, String> getFormFields() {
+        return formFields;
+    }
 
-    return queryParams;
-  }
-
-  public HttpMethod getS2sMethod() {
-
-    return s2sMethod;
-  }
+    public HttpMethod getS2sMethod() {
+        return s2sMethod;
+    }
 }
