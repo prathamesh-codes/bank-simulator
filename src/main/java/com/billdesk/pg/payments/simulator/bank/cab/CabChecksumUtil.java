@@ -1,6 +1,7 @@
 package com.billdesk.pg.payments.simulator.bank.cab;
 
 import java.nio.charset.StandardCharsets;
+import java.security.KeyStore.Entry;
 import java.security.MessageDigest;
 import java.util.Map;
 
@@ -107,5 +108,19 @@ public final class CabChecksumUtil {
 
     private static String safe(String value) {
         return value == null ? "" : value;
+    }
+    
+    static String buildTestApi3ChecksumString(
+    		Map<String, String> fields,
+    		String checksumKey) {
+    	String finalChecksumString = "";
+    	
+    	for(Map.Entry<String, String> entry : fields.entrySet()) {
+    		finalChecksumString += safe(entry.getValue()) + "|";
+    	}
+    	
+    	finalChecksumString += safe(checksumKey);
+    	
+    	return safe(finalChecksumString);
     }
 }
